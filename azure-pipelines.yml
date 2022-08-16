@@ -1,19 +1,52 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+name: '$(BuildDefinitionName).$(DayOfYear)$(Rev:.r)'
 
-trigger:
-- main
+trigger: none
+
+pr: none
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-20.04' # (default) microsoft-hosted agentpool
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+parameters:
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- name: runChaosTesting
+  displayName: "Run chaos testing"
+  type: boolean
+  default: false
+
+- name: runEmbeddedLoadtesting # Enable or disable embedded load testing
+  displayName: "Run load testing"
+  type: boolean
+  default: false
+
+- name: destroyEnvironment
+  displayName: "Destroy environment at the end"
+  type: boolean
+  default: true
+
+variables:
+- name:  'environment' # set the environment name as variable
+  value: 'e2e'
+
+- template: config/configuration.yaml # contains version numbers and global configuration settings
+- name:  'workingDirectory'    # Terraform root working directory
+  value: 'src/infra/workload'
+- name:  'azureServiceConnection' # environment specific service connection
+  value: 'alwayson-${{ variables.environment }}-serviceconnection'
+
+- template: config/variables-values-${{ variables.environment }}.yaml # contains environment-specific values (non-secret)
+
+# We do not use custom domains for e2e envs so we set this variable to empty
+- name: 'terraformAdditionalParametersCustomDomains'
+  value: ''
+
+stages:
+
+- template: templates/stages-full-release.yaml
+  parameters:
+    environment: '${{ variables.environment }}'
+    runEmbeddedLoadtesting: ${{ parameters.runEmbeddedLoadtesting }}
+    runChaosTesting: ${{ parameters.runChaosTesting }}
+    destroyOldEnvironment: ${{ parameters.destroyEnvironment }}
+    trafficSwitchSteps:
+    - 100

@@ -42,7 +42,7 @@ variables:
 
 stages:
 
-- template: templates/stages-full-release.yaml
+- template: .ado/pipelines/templates/stages-full-release.yaml
   parameters:
     environment: '${{ variables.environment }}'
     runEmbeddedLoadtesting: ${{ parameters.runEmbeddedLoadtesting }}

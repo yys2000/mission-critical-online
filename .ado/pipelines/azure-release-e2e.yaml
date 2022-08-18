@@ -28,9 +28,9 @@ variables:
 - name:  'environment' # set the environment name as variable
   value: 'e2e'
 
-- template: config/configuration.yaml # contains version numbers and global configuration settings
+- template: .ado/pipeline/config/configuration.yaml # contains version numbers and global configuration settings
 - name:  'workingDirectory'    # Terraform root working directory
-  value: 'src/infra/workload'
+  value: '.ado/pipelines/src/infra/workload'
 - name:  'azureServiceConnection' # environment specific service connection
   value: 'alwayson-${{ variables.environment }}-serviceconnection'
 
